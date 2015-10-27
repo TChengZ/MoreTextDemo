@@ -6,6 +6,7 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.TextView;
 
@@ -37,7 +38,8 @@ public class TextUtil {
         }
         String more = context.getResources().getString(R.string.info_more);
         String ellipsized = TextUtils.ellipsize(textView.getText(), textView.getPaint(), (float) textView.getWidth() * ellipsizeLine, TextUtils.TruncateAt.END).toString();
-        if(!ellipsized.endsWith("...")) {
+        final String ellipsis = context.getResources().getString(R.string.ellipsis);
+        if(!ellipsized.endsWith(ellipsis) && !ellipsized.endsWith("...")) {
             textView.setText(originalText);
             return;
         }
@@ -57,7 +59,7 @@ public class TextUtil {
             ellipsized = ellipsized.substring(0, ellipPos);
         }
         //替换[更多]的位置点
-        int changePos = ellipsized.length() - ("...").length() - more.length() - 2;
+        int changePos = ellipsized.length() - (ellipsis).length() - more.length() - 2;
         String endStr = ellipsized.substring(changePos < 0 ? 0:changePos, ellipsized.length() - 1);
         String result;
         //如果要截取替换[更多]的字符串包括换行符，则直接把[more]加在文字末尾
@@ -66,7 +68,7 @@ public class TextUtil {
         }
         else {
             String tmp = ellipsized.substring(0, changePos < 0 ? 0:changePos);
-            result = tmp + ("...") + more;
+            result = tmp + (ellipsis) + more;
         }
         textView.setMovementMethod(LinkMovementMethod.getInstance());
         SpannableString spannable = new SpannableString(result);
@@ -75,21 +77,24 @@ public class TextUtil {
             @Override
             public void onClick(View widget) {
                 if(textView.getLineCount() == ellipsizeLine){
-                    SpannableString spannable = new SpannableString(originalText);
-                    ClickableSpan fullclick = new ClickableSpan() {
+                    String less = context.getResources().getString(R.string.info_less);
+                    String newText = originalText + less;
+                    SpannableString spannable = new SpannableString(newText);
+                    ClickableSpan fullClick = new ClickableSpan() {
                         @Override
                         public void onClick(View widget) {
-                            setEllipsize(context, textView, originalText, 2);
+                            setEllipsize(context, textView, originalText, ellipsizeLine);
                         }
 
                         @Override
                         public void updateDrawState(TextPaint ds) {
                             ds.setUnderlineText(false);
                             ds.clearShadowLayer();
-                            ds.setColor(context.getResources().getColor(R.color.text_normal_length));
                         }
                     };
-                    spannable.setSpan(fullclick, 0, originalText.length(), SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
+                    spannable.setSpan(fullClick, 0, newText.length(), SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
+                    spannable.setSpan(new ForegroundColorSpan(context.getResources().getColor(R.color.text_more)),
+                            newText.length() - less.length(), newText.length(), SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
                     textView.setText(spannable);
                 }
             }
@@ -98,10 +103,11 @@ public class TextUtil {
             public void updateDrawState(TextPaint ds) {
                 ds.setUnderlineText(false);
                 ds.clearShadowLayer();
-                ds.setColor(context.getResources().getColor(R.color.text_more));
             }
         };
-        spannable.setSpan(click, result.length() - more.length(), result.length(), SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
+        spannable.setSpan(click, 0, result.length(), SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
+        spannable.setSpan(new ForegroundColorSpan(context.getResources().getColor(R.color.text_more)),
+                result.length() - more.length(), result.length(), SpannableString.SPAN_INCLUSIVE_INCLUSIVE);
         textView.setText(spannable);
     }
 }
