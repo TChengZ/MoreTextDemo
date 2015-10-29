@@ -70,6 +70,7 @@ public class TextUtil {
             String tmp = ellipsized.substring(0, changePos < 0 ? 0:changePos);
             result = tmp + (ellipsis) + more;
         }
+        textView.setHighlightColor(context.getResources().getColor(android.R.color.transparent));
         textView.setMovementMethod(LinkMovementMethod.getInstance());
         SpannableString spannable = new SpannableString(result);
         ClickableSpan click = new ClickableSpan() {
